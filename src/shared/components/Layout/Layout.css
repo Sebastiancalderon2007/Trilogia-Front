@@ -1,0 +1,130 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--color-negro);
+  color: var(--text-invertido);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  padding: 1.25rem 1.1rem;
+  font-size: 1.02rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.marca-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-amarillo);
+  box-shadow: 0 0 0 3px var(--color-rojo);
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem 0.6rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius);
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.sidebar-link.activo {
+  background: var(--color-rojo);
+  color: #fff;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.usuario-info {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+.usuario-info span {
+  color: var(--color-amarillo);
+  font-size: 0.72rem;
+}
+.btn-logout {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+}
+.btn-logout:hover {
+  color: var(--color-rojo);
+}
+
+.contenido {
+  flex: 1;
+  min-width: 0;
+}
+
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    display: none;
+  }
+  .contenido {
+    padding-bottom: 4.2rem;
+  }
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    background: var(--color-negro);
+    padding: 0.4rem 0.2rem calc(0.4rem + env(safe-area-inset-bottom));
+    z-index: 50;
+  }
+  .bottom-link {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    color: rgba(255, 255, 255, 0.65);
+    text-decoration: none;
+    font-size: 0.65rem;
+    padding: 0.3rem 0;
+    border-radius: var(--radius);
+  }
+  .bottom-link.activo {
+    color: var(--color-amarillo);
+  }
+}

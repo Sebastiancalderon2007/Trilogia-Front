@@ -1,0 +1,120 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg-app);
+  color: var(--text-principal);
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.btn {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.55rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: opacity 0.15s ease;
+}
+.btn:hover {
+  opacity: 0.9;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primario {
+  background: var(--color-rojo);
+  color: var(--text-invertido);
+}
+.btn-secundario {
+  background: var(--bg-panel);
+  color: var(--text-principal);
+  border: 1px solid var(--border-color);
+}
+.btn-amarillo {
+  background: var(--color-amarillo);
+  color: var(--color-negro);
+}
+.btn-peligro {
+  background: var(--color-peligro);
+  color: var(--text-invertido);
+}
+.btn-sm {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.9rem;
+}
+.campo label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secundario);
+}
+.campo input,
+.campo select,
+.campo textarea {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: var(--text-principal);
+}
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  outline: 2px solid var(--color-amarillo);
+  outline-offset: 1px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.badge-rojo {
+  background: #fdecea;
+  color: var(--color-rojo-oscuro);
+}
+.badge-amarillo {
+  background: #fff6df;
+  color: var(--color-amarillo-oscuro);
+}
+.badge-verde {
+  background: #e8f5e9;
+  color: var(--color-exito);
+}
+.badge-gris {
+  background: #ececea;
+  color: var(--text-secundario);
+}
