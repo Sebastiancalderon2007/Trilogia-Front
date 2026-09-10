@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService.js';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
@@ -59,10 +60,19 @@ export default function DashboardPage() {
       </div>
 
       {resumen.alertasStock.length > 0 && (
-        <div className="alerta-stock">
-          ⚠ {resumen.alertasStock.length} insumo(s) por debajo del stock mínimo:{' '}
-          {resumen.alertasStock.map((a) => `${a.nombre} (${a.stockActual})`).join(', ')}
-        </div>
+        <details className="alerta-stock alerta-stock-detalle">
+          <summary>
+            ⚠ {resumen.alertasStock.length} insumo(s) por debajo del stock mínimo — ver detalle
+          </summary>
+          <ul>
+            {resumen.alertasStock.map((a) => (
+              <li key={a.id}>
+                {a.nombre}: quedan {a.stockActual} (mínimo {a.stockMinimo})
+              </li>
+            ))}
+          </ul>
+          <Link to="/inventario">Ir a Inventario →</Link>
+        </details>
       )}
 
       <BloquePeriodo titulo="Hoy" datos={resumen.hoy} />

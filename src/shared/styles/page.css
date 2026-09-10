@@ -87,6 +87,28 @@
   font-size: 0.88rem;
 }
 
+.alerta-stock-detalle summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+.alerta-stock-detalle summary::-webkit-details-marker {
+  display: none;
+}
+.alerta-stock-detalle ul {
+  margin: 0.7rem 0 0.5rem;
+  padding-left: 1.1rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.alerta-stock-detalle li {
+  margin-bottom: 0.2rem;
+}
+.alerta-stock-detalle a {
+  color: var(--color-rojo-oscuro);
+  font-weight: 600;
+}
+
 @media (max-width: 640px) {
   .pagina {
     padding: 1rem;

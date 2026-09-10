@@ -11,6 +11,7 @@ import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
 import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
 import { coincide } from '../../../shared/utils/texto.js';
+import { bajoStock } from '../../../shared/utils/inventario.js';
 
 const UNIDADES = [
   { value: 'g', label: 'Gramos (g)' },
@@ -97,7 +98,7 @@ export default function InventarioPage() {
       key: 'stockActual',
       header: 'Stock',
       render: (f) => {
-        const bajo = Number(f.stockActual) <= Number(f.stockMinimo);
+        const bajo = bajoStock(f);
         return (
           <span className={bajo ? 'badge badge-rojo' : ''}>
             {Number(f.stockActual)} {f.unidadMedida}
@@ -130,7 +131,7 @@ export default function InventarioPage() {
     },
   ];
 
-  const bajoStock = lista.filter((i) => Number(i.stockActual) <= Number(i.stockMinimo) && i.activo);
+  const insumosBajoStock = lista.filter((i) => i.activo && bajoStock(i));
 
   return (
     <div className="pagina">
@@ -143,9 +144,11 @@ export default function InventarioPage() {
         )}
       </div>
 
-      {bajoStock.length > 0 && (
+      {insumosBajoStock.length > 0 && (
         <div className="alerta-stock">
-          ⚠ {bajoStock.length} insumo(s) por debajo del stock mínimo: {bajoStock.map((i) => i.nombre).join(', ')}
+          ⚠ {insumosBajoStock.length} insumo(s) por debajo del stock mínimo:{' '}
+          {insumosBajoStock.slice(0, 6).map((i) => i.nombre).join(', ')}
+          {insumosBajoStock.length > 6 && ` y ${insumosBajoStock.length - 6} más`}
         </div>
       )}
 
