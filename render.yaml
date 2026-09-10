@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: trilogia-web
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      # Debe apuntar a la URL pública que Render le asigne al servicio trilogia-api
+      # (ej. https://trilogia-api.onrender.com). Vite la incrusta en el build, así
+      # que un cambio de valor requiere un nuevo deploy.
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
