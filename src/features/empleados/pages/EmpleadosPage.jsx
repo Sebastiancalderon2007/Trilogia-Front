@@ -5,6 +5,7 @@ import {
   crearEmpleado,
   actualizarEmpleado,
   eliminarEmpleado,
+  reactivarEmpleado,
   fetchTurnos,
   crearTurno,
   eliminarTurno,
@@ -29,6 +30,7 @@ export default function EmpleadosPage() {
   const [modalTurno, setModalTurno] = useState(false);
   const [formTurno, setFormTurno] = useState(TURNO_VACIO);
   const [errorTurno, setErrorTurno] = useState(null);
+  const [filtroEstado, setFiltroEstado] = useState('activos');
 
   useEffect(() => {
     dispatch(fetchEmpleados());
@@ -59,6 +61,14 @@ export default function EmpleadosPage() {
     if (confirm(`¿Desactivar a ${empleado.nombre}?`)) dispatch(eliminarEmpleado(empleado.id));
   };
 
+  const reactivar = (empleado) => {
+    if (confirm(`¿Reactivar a ${empleado.nombre}?`)) dispatch(reactivarEmpleado(empleado.id));
+  };
+
+  const empleadosFiltrados = empleados.filter((e) =>
+    filtroEstado === 'todos' ? true : filtroEstado === 'activos' ? e.activo : !e.activo
+  );
+
   const guardarTurno = async (e) => {
     e.preventDefault();
     setErrorTurno(null);
@@ -76,6 +86,11 @@ export default function EmpleadosPage() {
     { key: 'telefono', header: 'Teléfono', render: (f) => f.telefono || '—' },
     { key: 'valorHora', header: 'Valor hora', render: (f) => money(f.valorHora) },
     {
+      key: 'estado',
+      header: 'Estado',
+      render: (f) => <span className={`badge ${f.activo ? 'badge-verde' : 'badge-gris'}`}>{f.activo ? 'Activo' : 'Inactivo'}</span>,
+    },
+    {
       key: 'acciones',
       header: '',
       render: (f) => (
@@ -83,9 +98,15 @@ export default function EmpleadosPage() {
           <button className="btn btn-secundario btn-sm" onClick={() => abrirEditarEmpleado(f)}>
             Editar
           </button>
-          <button className="btn btn-peligro btn-sm" onClick={() => desactivarEmpleado(f)}>
-            Desactivar
-          </button>
+          {f.activo ? (
+            <button className="btn btn-peligro btn-sm" onClick={() => desactivarEmpleado(f)}>
+              Desactivar
+            </button>
+          ) : (
+            <button className="btn btn-secundario btn-sm" onClick={() => reactivar(f)}>
+              Reactivar
+            </button>
+          )}
         </div>
       ),
     },
@@ -125,18 +146,36 @@ export default function EmpleadosPage() {
         )}
       </div>
 
-      <div className="panel" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div className="panel" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <button className={`btn btn-sm ${tab === 'empleados' ? 'btn-primario' : 'btn-secundario'}`} onClick={() => setTab('empleados')}>
           Empleados
         </button>
         <button className={`btn btn-sm ${tab === 'turnos' ? 'btn-primario' : 'btn-secundario'}`} onClick={() => setTab('turnos')}>
           Turnos / Pagos
         </button>
+        {tab === 'empleados' && (
+          <>
+            <span style={{ width: 1, background: 'var(--border-color)', margin: '0 0.2rem' }} />
+            {[
+              { key: 'activos', label: 'Activos' },
+              { key: 'inactivos', label: 'Inactivos' },
+              { key: 'todos', label: 'Todos' },
+            ].map((e) => (
+              <button
+                key={e.key}
+                className={`btn btn-sm ${filtroEstado === e.key ? 'btn-amarillo' : 'btn-secundario'}`}
+                onClick={() => setFiltroEstado(e.key)}
+              >
+                {e.label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
 
       <div className="panel">
         {tab === 'empleados' ? (
-          <Table columnas={columnasEmpleados} filas={empleados.filter((e) => e.activo)} vacio="No hay empleados registrados" />
+          <Table columnas={columnasEmpleados} filas={empleadosFiltrados} vacio="No hay empleados registrados" />
         ) : (
           <Table columnas={columnasTurnos} filas={turnos} vacio="No hay turnos registrados" />
         )}

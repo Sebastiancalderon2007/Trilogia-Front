@@ -24,4 +24,8 @@ export const productoService = {
   async eliminar(id) {
     await api.delete(`/api/productos/${id}`);
   },
+  async reactivar(id) {
+    const { data } = await api.patch(`/api/productos/${id}/reactivar`);
+    return data.data;
+  },
 };

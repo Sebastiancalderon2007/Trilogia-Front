@@ -21,6 +21,11 @@ export const eliminarEmpleado = createAsyncThunk('empleados/eliminar', async (id
   dispatch(fetchEmpleados());
 });
 
+export const reactivarEmpleado = createAsyncThunk('empleados/reactivar', async (id, { dispatch }) => {
+  await empleadoService.actualizar(id, { activo: true });
+  dispatch(fetchEmpleados());
+});
+
 export const fetchTurnos = createAsyncThunk('turnos/fetch', (filtros) => turnoService.listar(filtros));
 
 export const crearTurno = createAsyncThunk('turnos/crear', async (payload, { dispatch, rejectWithValue }) => {

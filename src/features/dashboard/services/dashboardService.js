@@ -5,4 +5,8 @@ export const dashboardService = {
     const { data } = await api.get('/api/dashboard/resumen');
     return data.data;
   },
+  async serie(periodo) {
+    const { data } = await api.get('/api/dashboard/serie', { params: { periodo } });
+    return data.data;
+  },
 };

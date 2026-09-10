@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchProductos, crearProducto, actualizarProducto, eliminarProducto } from '../slices/productosSlice.js';
+import { fetchProductos, crearProducto, actualizarProducto, eliminarProducto, reactivarProducto } from '../slices/productosSlice.js';
 import { fetchIngredientes } from '../../inventario/slices/ingredientesSlice.js';
 import { productoService } from '../services/productoService.js';
 import Table from '../../../shared/components/Table/Table.jsx';
@@ -27,6 +27,7 @@ export default function ProductosPage() {
   const { lista } = useSelector((state) => state.productos);
   const { lista: ingredientes } = useSelector((state) => state.ingredientes);
   const [filtroTipo, setFiltroTipo] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('activos');
   const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState(null);
@@ -106,7 +107,13 @@ export default function ProductosPage() {
     if (confirm(`¿Desactivar "${producto.nombre}"?`)) dispatch(eliminarProducto(producto.id));
   };
 
-  const filas = filtroTipo ? lista.filter((p) => p.tipo === filtroTipo) : lista;
+  const reactivar = (producto) => {
+    if (confirm(`¿Reactivar "${producto.nombre}"?`)) dispatch(reactivarProducto(producto.id));
+  };
+
+  const filas = lista
+    .filter((p) => (filtroTipo ? p.tipo === filtroTipo : true))
+    .filter((p) => (filtroEstado === 'todos' ? true : filtroEstado === 'activos' ? p.activo : !p.activo));
 
   const columnas = [
     { key: 'nombre', header: 'Nombre' },
@@ -122,6 +129,11 @@ export default function ProductosPage() {
     { key: 'ingredientes', header: 'Ingredientes', render: (f) => f.recetaItems.length },
     { key: 'precioVenta', header: 'Precio de venta', render: (f) => (f.precioVenta ? money(f.precioVenta) : '— sin definir') },
     {
+      key: 'estado',
+      header: 'Estado',
+      render: (f) => <span className={`badge ${f.activo ? 'badge-verde' : 'badge-gris'}`}>{f.activo ? 'Activo' : 'Inactivo'}</span>,
+    },
+    {
       key: 'acciones',
       header: '',
       render: (f) => (
@@ -129,9 +141,15 @@ export default function ProductosPage() {
           <button className="btn btn-secundario btn-sm" onClick={() => abrirEditar(f)}>
             Editar / Costeo
           </button>
-          <button className="btn btn-peligro btn-sm" onClick={() => eliminar(f)}>
-            Desactivar
-          </button>
+          {f.activo ? (
+            <button className="btn btn-peligro btn-sm" onClick={() => eliminar(f)}>
+              Desactivar
+            </button>
+          ) : (
+            <button className="btn btn-secundario btn-sm" onClick={() => reactivar(f)}>
+              Reactivar
+            </button>
+          )}
         </div>
       ),
     },
@@ -146,7 +164,7 @@ export default function ProductosPage() {
         </button>
       </div>
 
-      <div className="panel" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <div className="panel" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         {['', 'PLATO', 'BEBIDA', 'SUBPREPARACION'].map((t) => (
           <button
             key={t || 'todos'}
@@ -156,16 +174,26 @@ export default function ProductosPage() {
             {t === '' ? 'Todos' : t === 'PLATO' ? 'Platos' : t === 'BEBIDA' ? 'Bebidas' : 'Sub-preparaciones'}
           </button>
         ))}
+        <span style={{ width: 1, background: 'var(--border-color)', margin: '0 0.2rem' }} />
+        {[
+          { key: 'activos', label: 'Activos' },
+          { key: 'inactivos', label: 'Inactivos' },
+          { key: 'todos', label: 'Todos' },
+        ].map((e) => (
+          <button
+            key={e.key}
+            className={`btn btn-sm ${filtroEstado === e.key ? 'btn-amarillo' : 'btn-secundario'}`}
+            onClick={() => setFiltroEstado(e.key)}
+          >
+            {e.label}
+          </button>
+        ))}
       </div>
 
       <Buscador valor={busqueda} onChange={setBusqueda} placeholder="Buscar producto…" />
 
       <div className="panel">
-        <Table
-          columnas={columnas}
-          filas={filas.filter((p) => p.activo && coincide(p.nombre, busqueda))}
-          vacio="No hay productos registrados"
-        />
+        <Table columnas={columnas} filas={filas.filter((p) => coincide(p.nombre, busqueda))} vacio="No hay productos registrados" />
       </div>
 
       {modalAbierto && (

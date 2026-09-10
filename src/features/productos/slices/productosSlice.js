@@ -21,6 +21,11 @@ export const eliminarProducto = createAsyncThunk('productos/eliminar', async (id
   dispatch(fetchProductos());
 });
 
+export const reactivarProducto = createAsyncThunk('productos/reactivar', async (id, { dispatch }) => {
+  await productoService.reactivar(id);
+  dispatch(fetchProductos());
+});
+
 const productosSlice = createSlice({
   name: 'productos',
   initialState: { lista: [], loading: false, error: null },
