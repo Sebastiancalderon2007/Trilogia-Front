@@ -9,6 +9,8 @@ import {
 } from '../slices/ingredientesSlice.js';
 import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
+import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
+import { coincide } from '../../../shared/utils/texto.js';
 
 const UNIDADES = [
   { value: 'g', label: 'Gramos (g)' },
@@ -27,6 +29,7 @@ export default function InventarioPage() {
   const [form, setForm] = useState(VACIO);
   const [ingredienteMovimiento, setIngredienteMovimiento] = useState(null);
   const [movimiento, setMovimiento] = useState({ tipo: 'ENTRADA', motivo: 'COMPRA', cantidad: '', nota: '' });
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     dispatch(fetchIngredientes());
@@ -146,8 +149,14 @@ export default function InventarioPage() {
         </div>
       )}
 
+      <Buscador valor={busqueda} onChange={setBusqueda} placeholder="Buscar insumo o categoría…" />
+
       <div className="panel">
-        <Table columnas={columnas} filas={lista.filter((i) => i.activo)} vacio="No hay insumos registrados" />
+        <Table
+          columnas={columnas}
+          filas={lista.filter((i) => i.activo && (coincide(i.nombre, busqueda) || coincide(i.categoria, busqueda)))}
+          vacio="No hay insumos registrados"
+        />
       </div>
 
       {modalAbierto && (

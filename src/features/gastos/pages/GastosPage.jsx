@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchGastos, crearGasto, eliminarGasto } from '../slices/gastosSlice.js';
 import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
+import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
+import { coincide } from '../../../shared/utils/texto.js';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
 const VACIO = { categoria: '', descripcion: '', valor: '', fecha: new Date().toISOString().slice(0, 10) };
@@ -12,6 +14,7 @@ export default function GastosPage() {
   const { lista } = useSelector((state) => state.gastos);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [form, setForm] = useState(VACIO);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     dispatch(fetchGastos());
@@ -56,8 +59,14 @@ export default function GastosPage() {
         <div className="valor">{money(totalPeriodo)}</div>
       </div>
 
+      <Buscador valor={busqueda} onChange={setBusqueda} placeholder="Buscar por descripción o categoría…" />
+
       <div className="panel">
-        <Table columnas={columnas} filas={lista} vacio="No hay gastos registrados" />
+        <Table
+          columnas={columnas}
+          filas={lista.filter((g) => coincide(g.descripcion, busqueda) || coincide(g.categoria, busqueda))}
+          vacio="No hay gastos registrados"
+        />
       </div>
 
       {modalAbierto && (

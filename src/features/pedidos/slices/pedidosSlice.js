@@ -13,6 +13,16 @@ export const crearPedido = createAsyncThunk('pedidos/crear', async (payload, { d
   }
 });
 
+export const actualizarPedido = createAsyncThunk('pedidos/actualizar', async ({ id, payload }, { dispatch, rejectWithValue }) => {
+  try {
+    const resultado = await pedidoService.actualizar(id, payload);
+    dispatch(fetchPedidos());
+    return resultado;
+  } catch (err) {
+    return rejectWithValue(err?.response?.data?.message || 'No se pudo actualizar el pedido');
+  }
+});
+
 export const actualizarEstadoPedido = createAsyncThunk(
   'pedidos/actualizarEstado',
   async ({ id, estado }, { dispatch }) => {

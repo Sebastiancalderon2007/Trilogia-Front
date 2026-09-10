@@ -13,6 +13,10 @@ export const pedidoService = {
     const { data } = await api.post('/api/pedidos', payload);
     return data;
   },
+  async actualizar(id, payload) {
+    const { data } = await api.put(`/api/pedidos/${id}`, payload);
+    return data;
+  },
   async actualizarEstado(id, estado) {
     const { data } = await api.patch(`/api/pedidos/${id}/estado`, { estado });
     return data.data;

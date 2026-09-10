@@ -1,8 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { fetchPedidos, actualizarEstadoPedido } from '../slices/pedidosSlice.js';
+import { fetchPedidos, actualizarEstadoPedido, actualizarPedido } from '../slices/pedidosSlice.js';
+import { fetchProductos } from '../../productos/slices/productosSlice.js';
 import Table from '../../../shared/components/Table/Table.jsx';
+import Modal from '../../../shared/components/Modal/Modal.jsx';
+import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
+import { coincide } from '../../../shared/utils/texto.js';
+import { generarReciboPedido } from '../../../shared/utils/generarRecibo.js';
+import PedidoForm from '../components/PedidoForm.jsx';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
 
@@ -19,14 +25,32 @@ const ENTREGA_LABEL = {
   EN_LOCAL: 'En el local',
 };
 
+const ESTADOS_EDITABLES = ['PENDIENTE', 'EN_PREPARACION'];
+
 export default function PedidosPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { lista } = useSelector((state) => state.pedidos);
+  const { lista: productos } = useSelector((state) => state.productos);
+  const [busqueda, setBusqueda] = useState('');
+  const [editando, setEditando] = useState(null);
 
   useEffect(() => {
     dispatch(fetchPedidos());
+    dispatch(fetchProductos());
   }, [dispatch]);
+
+  const guardarEdicion = async (datos) => {
+    const resultado = await dispatch(actualizarPedido({ id: editando.id, payload: datos }));
+    if (actualizarPedido.rejected.match(resultado)) {
+      throw new Error(resultado.payload || 'No se pudo actualizar el pedido');
+    }
+    const alertas = resultado.payload.alertasStock;
+    if (alertas?.length) {
+      alert('Pedido actualizado. Atención: quedaron bajos de stock: ' + alertas.map((a) => a.nombre).join(', '));
+    }
+    setEditando(null);
+  };
 
   const columnas = [
     { key: 'id', header: '#' },
@@ -60,7 +84,25 @@ export default function PedidosPage() {
           </select>
         ),
     },
+    {
+      key: 'acciones',
+      header: '',
+      render: (f) => (
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button className="btn btn-secundario btn-sm" onClick={() => generarReciboPedido(f)}>
+            Recibo
+          </button>
+          {ESTADOS_EDITABLES.includes(f.estado) && (
+            <button className="btn btn-secundario btn-sm" onClick={() => setEditando(f)}>
+              Editar
+            </button>
+          )}
+        </div>
+      ),
+    },
   ];
+
+  const filas = lista.filter((f) => coincide(f.clienteNombre, busqueda) || f.items.some((i) => coincide(i.producto.nombre, busqueda)));
 
   return (
     <div className="pagina">
@@ -71,9 +113,30 @@ export default function PedidosPage() {
         </button>
       </div>
 
+      <Buscador valor={busqueda} onChange={setBusqueda} placeholder="Buscar por cliente o producto…" />
+
       <div className="panel">
-        <Table columnas={columnas} filas={lista} vacio="Todavía no hay pedidos registrados" />
+        <Table columnas={columnas} filas={filas} vacio="Todavía no hay pedidos registrados" />
       </div>
+
+      {editando && (
+        <Modal titulo={`Editar pedido #${editando.id}`} onCerrar={() => setEditando(null)} ancho="720px">
+          <PedidoForm
+            productos={productos}
+            valoresIniciales={{
+              clienteNombre: editando.clienteNombre,
+              telefono: editando.telefono,
+              tipoEntrega: editando.tipoEntrega,
+              direccion: editando.direccion,
+              notas: editando.notas,
+              items: editando.items.map((i) => ({ productoId: i.productoId, cantidad: Number(i.cantidad) })),
+            }}
+            onSubmit={guardarEdicion}
+            onCancelar={() => setEditando(null)}
+            textoBoton="Guardar cambios"
+          />
+        </Modal>
+      )}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   FiShoppingBag,
   FiUsers,
   FiDollarSign,
+  FiFileText,
   FiLogOut,
 } from 'react-icons/fi';
 import { logout } from '../../../features/auth/slices/authSlice.js';
@@ -19,6 +20,7 @@ const NAV_ADMIN = [
   { to: '/inventario', label: 'Inventario', icon: FiPackage },
   { to: '/empleados', label: 'Empleados', icon: FiUsers },
   { to: '/gastos', label: 'Gastos', icon: FiDollarSign },
+  { to: '/reportes', label: 'Reportes', icon: FiFileText },
 ];
 
 const NAV_EMPLEADO = [

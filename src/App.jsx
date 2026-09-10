@@ -11,6 +11,7 @@ import PedidosPage from './features/pedidos/pages/PedidosPage.jsx';
 import NuevoPedidoPage from './features/pedidos/pages/NuevoPedidoPage.jsx';
 import EmpleadosPage from './features/empleados/pages/EmpleadosPage.jsx';
 import GastosPage from './features/gastos/pages/GastosPage.jsx';
+import ReportesPage from './features/reportes/pages/ReportesPage.jsx';
 
 function ProtectedRoute({ children, soloAdmin = false }) {
   const { token, restoring, usuario } = useSelector((state) => state.auth);
@@ -76,6 +77,14 @@ function App() {
           element={
             <ProtectedRoute soloAdmin>
               <GastosPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <ProtectedRoute soloAdmin>
+              <ReportesPage />
             </ProtectedRoute>
           }
         />

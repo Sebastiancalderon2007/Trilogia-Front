@@ -5,6 +5,8 @@ import { fetchIngredientes } from '../../inventario/slices/ingredientesSlice.js'
 import { productoService } from '../services/productoService.js';
 import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
+import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
+import { coincide } from '../../../shared/utils/texto.js';
 import RecetaItemsEditor from '../components/RecetaItemsEditor.jsx';
 import '../components/RecetaItemsEditor.css';
 
@@ -25,6 +27,7 @@ export default function ProductosPage() {
   const { lista } = useSelector((state) => state.productos);
   const { lista: ingredientes } = useSelector((state) => state.ingredientes);
   const [filtroTipo, setFiltroTipo] = useState('');
+  const [busqueda, setBusqueda] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState(VACIO);
@@ -155,8 +158,14 @@ export default function ProductosPage() {
         ))}
       </div>
 
+      <Buscador valor={busqueda} onChange={setBusqueda} placeholder="Buscar producto…" />
+
       <div className="panel">
-        <Table columnas={columnas} filas={filas.filter((p) => p.activo)} vacio="No hay productos registrados" />
+        <Table
+          columnas={columnas}
+          filas={filas.filter((p) => p.activo && coincide(p.nombre, busqueda))}
+          vacio="No hay productos registrados"
+        />
       </div>
 
       {modalAbierto && (
