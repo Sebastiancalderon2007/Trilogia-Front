@@ -34,6 +34,7 @@ export default function ProductosPage() {
   const [form, setForm] = useState(VACIO);
   const [items, setItems] = useState([]);
   const [costeo, setCosteo] = useState(null);
+  const [viendoReceta, setViendoReceta] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProductos());
@@ -126,7 +127,15 @@ export default function ProductosPage() {
         </span>
       ),
     },
-    { key: 'ingredientes', header: 'Ingredientes', render: (f) => f.recetaItems.length },
+    {
+      key: 'ingredientes',
+      header: 'Ingredientes',
+      render: (f) => (
+        <button className="btn btn-secundario btn-sm" onClick={() => setViendoReceta(f)}>
+          Ver receta ({f.recetaItems.length})
+        </button>
+      ),
+    },
     { key: 'precioVenta', header: 'Precio de venta', render: (f) => (f.precioVenta ? money(f.precioVenta) : '— sin definir') },
     {
       key: 'estado',
@@ -262,6 +271,45 @@ export default function ProductosPage() {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {viendoReceta && (
+        <Modal titulo={`Receta: ${viendoReceta.nombre}`} onCerrar={() => setViendoReceta(null)}>
+          {viendoReceta.porciones && (
+            <p style={{ marginTop: 0, fontSize: '0.85rem', color: 'var(--text-secundario)' }}>
+              Rinde {Number(viendoReceta.porciones)} {viendoReceta.tipo === 'SUBPREPARACION' ? 'g' : 'porción(es)'}
+            </p>
+          )}
+          {viendoReceta.recetaItems.length === 0 ? (
+            <p>Esta receta todavía no tiene ingredientes cargados.</p>
+          ) : (
+            <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+              {viendoReceta.recetaItems.map((it) => (
+                <li key={it.id} style={{ marginBottom: '0.4rem' }}>
+                  {it.ingrediente ? it.ingrediente.nombre : it.subpreparacion.nombre}
+                  {it.subpreparacion && <span className="badge badge-amarillo" style={{ marginLeft: '0.4rem' }}>sub-preparación</span>}
+                  {' — '}
+                  {Number(it.cantidad)} {it.unidad}
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="acciones-form">
+            <button
+              className="btn btn-secundario"
+              onClick={() => {
+                const producto = viendoReceta;
+                setViendoReceta(null);
+                abrirEditar(producto);
+              }}
+            >
+              Editar receta
+            </button>
+            <button className="btn btn-primario" onClick={() => setViendoReceta(null)}>
+              Cerrar
+            </button>
+          </div>
         </Modal>
       )}
     </div>
