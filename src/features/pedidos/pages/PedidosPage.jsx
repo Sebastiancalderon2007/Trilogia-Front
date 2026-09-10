@@ -26,6 +26,13 @@ const ENTREGA_LABEL = {
   EN_LOCAL: 'En el local',
 };
 
+const FORMA_PAGO_LABEL = {
+  EFECTIVO: 'Efectivo',
+  TARJETA: 'Tarjeta',
+  TRANSFERENCIA: 'Transferencia',
+  OTRO: 'Otro',
+};
+
 const ESTADOS_EDITABLES = ['PENDIENTE', 'EN_PREPARACION'];
 
 export default function PedidosPage() {
@@ -66,6 +73,7 @@ export default function PedidosPage() {
     { key: 'tipoEntrega', header: 'Entrega', render: (f) => ENTREGA_LABEL[f.tipoEntrega] },
     { key: 'direccion', header: 'Dirección', render: (f) => f.direccion || '—' },
     { key: 'items', header: 'Productos', render: (f) => f.items.map((i) => `${Number(i.cantidad)}x ${i.producto.nombre}`).join(', ') },
+    { key: 'formaPago', header: 'Pago', render: (f) => FORMA_PAGO_LABEL[f.formaPago] || f.formaPago },
     { key: 'total', header: 'Total', render: (f) => money(f.total) },
     {
       key: 'estado',
@@ -131,8 +139,15 @@ export default function PedidosPage() {
               telefono: editando.telefono,
               tipoEntrega: editando.tipoEntrega,
               direccion: editando.direccion,
+              formaPago: editando.formaPago,
+              fecha: editando.fecha,
               notas: editando.notas,
-              items: editando.items.map((i) => ({ productoId: i.productoId, cantidad: Number(i.cantidad) })),
+              items: editando.items.map((i) => ({
+                productoId: i.productoId,
+                cantidad: Number(i.cantidad),
+                precioUnitario: Number(i.precioUnitario),
+                adiciones: i.adiciones || [],
+              })),
             }}
             onSubmit={guardarEdicion}
             onCancelar={() => setEditando(null)}

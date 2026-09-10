@@ -2,7 +2,30 @@ import { useState } from 'react';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
 
-const VACIO = { clienteNombre: '', telefono: '', tipoEntrega: 'EN_LOCAL', direccion: '', notas: '', items: [] };
+// Formato que espera <input type="datetime-local">, en hora local (no UTC).
+const aFechaLocal = (fecha) => {
+  const d = fecha ? new Date(fecha) : new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const FORMA_PAGO_LABEL = {
+  EFECTIVO: 'Efectivo',
+  TARJETA: 'Tarjeta',
+  TRANSFERENCIA: 'Transferencia',
+  OTRO: 'Otro',
+};
+
+const VACIO = {
+  clienteNombre: '',
+  telefono: '',
+  tipoEntrega: 'EN_LOCAL',
+  direccion: '',
+  formaPago: 'EFECTIVO',
+  fecha: null,
+  notas: '',
+  items: [],
+};
 
 // Formulario de pedido reutilizado tanto para crear (NuevoPedidoPage) como
 // para editar uno existente (modal de edición en PedidosPage). `onSubmit`
@@ -14,8 +37,11 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
   const [telefono, setTelefono] = useState(iniciales.telefono || '');
   const [tipoEntrega, setTipoEntrega] = useState(iniciales.tipoEntrega);
   const [direccion, setDireccion] = useState(iniciales.direccion || '');
+  const [formaPago, setFormaPago] = useState(iniciales.formaPago || 'EFECTIVO');
+  const [fecha, setFecha] = useState(aFechaLocal(iniciales.fecha));
   const [notas, setNotas] = useState(iniciales.notas || '');
-  const [items, setItems] = useState(iniciales.items);
+  const [items, setItems] = useState(iniciales.items.map((i) => ({ adiciones: [], ...i })));
+  const [nuevaAdicion, setNuevaAdicion] = useState({});
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -23,11 +49,13 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
 
   const agregarItem = (productoId) => {
     if (!productoId) return;
-    const existente = items.find((i) => i.productoId === Number(productoId));
+    productoId = Number(productoId);
+    const existente = items.find((i) => i.productoId === productoId);
     if (existente) {
-      setItems(items.map((i) => (i.productoId === existente.productoId ? { ...i, cantidad: i.cantidad + 1 } : i)));
+      setItems(items.map((i) => (i.productoId === productoId ? { ...i, cantidad: i.cantidad + 1 } : i)));
     } else {
-      setItems([...items, { productoId: Number(productoId), cantidad: 1 }]);
+      const producto = productos.find((p) => p.id === productoId);
+      setItems([...items, { productoId, cantidad: 1, precioUnitario: Number(producto.precioVenta), adiciones: [] }]);
     }
   };
 
@@ -35,12 +63,33 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
     setItems(items.map((i) => (i.productoId === productoId ? { ...i, cantidad: Number(cantidad) } : i)));
   };
 
+  const cambiarPrecio = (productoId, precioUnitario) => {
+    setItems(items.map((i) => (i.productoId === productoId ? { ...i, precioUnitario: Number(precioUnitario) } : i)));
+  };
+
   const quitarItem = (productoId) => setItems(items.filter((i) => i.productoId !== productoId));
 
-  const total = items.reduce((acc, item) => {
-    const producto = productos.find((p) => p.id === item.productoId);
-    return acc + (producto ? Number(producto.precioVenta) * item.cantidad : 0);
-  }, 0);
+  const agregarAdicion = (productoId) => {
+    const { nombre, precio } = nuevaAdicion[productoId] || {};
+    if (!nombre?.trim()) return;
+    setItems(
+      items.map((i) =>
+        i.productoId === productoId ? { ...i, adiciones: [...i.adiciones, { nombre: nombre.trim(), precio: Number(precio) || 0 }] } : i
+      )
+    );
+    setNuevaAdicion({ ...nuevaAdicion, [productoId]: { nombre: '', precio: '' } });
+  };
+
+  const quitarAdicion = (productoId, idx) => {
+    setItems(items.map((i) => (i.productoId === productoId ? { ...i, adiciones: i.adiciones.filter((_, j) => j !== idx) } : i)));
+  };
+
+  const subtotalItem = (item) => {
+    const totalAdiciones = item.adiciones.reduce((acc, a) => acc + Number(a.precio), 0);
+    return (Number(item.precioUnitario) + totalAdiciones) * item.cantidad;
+  };
+
+  const total = items.reduce((acc, item) => acc + subtotalItem(item), 0);
 
   const enviar = async (e) => {
     e.preventDefault();
@@ -60,6 +109,8 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
         telefono: telefono || null,
         tipoEntrega,
         direccion: tipoEntrega === 'DOMICILIO' ? direccion : null,
+        formaPago,
+        fecha: new Date(fecha).toISOString(),
         notas: notas || null,
         items,
       });
@@ -102,6 +153,20 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
               placeholder={tipoEntrega === 'DOMICILIO' ? 'Calle, número, barrio…' : 'No aplica'}
             />
           </div>
+          <div className="campo">
+            <label>Forma de pago</label>
+            <select value={formaPago} onChange={(e) => setFormaPago(e.target.value)}>
+              {Object.entries(FORMA_PAGO_LABEL).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="campo">
+            <label>Fecha y hora del pedido</label>
+            <input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          </div>
         </div>
         <div className="campo">
           <label>Notas (opcional)</label>
@@ -137,6 +202,7 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
                 <tr>
                   <th>Producto</th>
                   <th>Cantidad</th>
+                  <th>Precio unit.</th>
                   <th>Subtotal</th>
                   <th></th>
                 </tr>
@@ -144,9 +210,49 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
               <tbody>
                 {items.map((item) => {
                   const producto = productos.find((p) => p.id === item.productoId);
+                  const adicion = nuevaAdicion[item.productoId] || { nombre: '', precio: '' };
                   return (
                     <tr key={item.productoId}>
-                      <td>{producto?.nombre}</td>
+                      <td>
+                        {producto?.nombre}
+                        <div style={{ marginTop: '0.4rem' }}>
+                          {item.adiciones.map((a, idx) => (
+                            <span
+                              key={idx}
+                              className="badge badge-gris"
+                              style={{ marginRight: '0.3rem', marginBottom: '0.3rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                            >
+                              + {a.nombre} ({money(a.precio)})
+                              <button
+                                type="button"
+                                onClick={() => quitarAdicion(item.productoId, idx)}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, lineHeight: 1 }}
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                          <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.3rem' }}>
+                            <input
+                              placeholder="Adición (ej: extra queso)"
+                              value={adicion.nombre}
+                              onChange={(e) => setNuevaAdicion({ ...nuevaAdicion, [item.productoId]: { ...adicion, nombre: e.target.value } })}
+                              style={{ width: '160px', fontSize: '0.82rem' }}
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Precio"
+                              value={adicion.precio}
+                              onChange={(e) => setNuevaAdicion({ ...nuevaAdicion, [item.productoId]: { ...adicion, precio: e.target.value } })}
+                              style={{ width: '90px', fontSize: '0.82rem' }}
+                            />
+                            <button type="button" className="btn btn-secundario btn-sm" onClick={() => agregarAdicion(item.productoId)}>
+                              + Adición
+                            </button>
+                          </div>
+                        </div>
+                      </td>
                       <td>
                         <input
                           type="number"
@@ -157,7 +263,17 @@ export default function PedidoForm({ valoresIniciales, productos, onSubmit, onCa
                           style={{ width: '70px' }}
                         />
                       </td>
-                      <td>{producto ? money(producto.precioVenta * item.cantidad) : '—'}</td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.precioUnitario}
+                          onChange={(e) => cambiarPrecio(item.productoId, e.target.value)}
+                          style={{ width: '100px' }}
+                        />
+                      </td>
+                      <td>{money(subtotalItem(item))}</td>
                       <td>
                         <button type="button" className="btn btn-peligro btn-sm" onClick={() => quitarItem(item.productoId)}>
                           Quitar

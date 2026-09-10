@@ -23,6 +23,19 @@ const ENTREGA_LABEL = {
   EN_LOCAL: 'En el local',
 };
 
+const FORMA_PAGO_LABEL = {
+  EFECTIVO: 'Efectivo',
+  TARJETA: 'Tarjeta',
+  TRANSFERENCIA: 'Transferencia',
+  OTRO: 'Otro',
+};
+
+const nombreConAdiciones = (item) => {
+  const nombre = item.producto?.nombre || '—';
+  if (!item.adiciones?.length) return nombre;
+  return `${nombre}\n${item.adiciones.map((a) => `+ ${a.nombre} (${money(a.precio)})`).join('\n')}`;
+};
+
 export function buildReciboPedido(pedido) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -47,18 +60,20 @@ export function buildReciboPedido(pedido) {
   doc.text(new Date(pedido.fecha).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }), RIGHT, 20, { align: 'right' });
 
   let y = 40;
-  doc.setFillColor(...SUAVE);
-  doc.setDrawColor(...LINEA);
-  doc.roundedRect(M, y, RIGHT - M, 26, 2.5, 2.5, 'FD');
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
-  doc.setTextColor(...GRIS);
   const filas = [
     ['Cliente', pedido.clienteNombre || '—'],
     ['Teléfono', pedido.telefono || '—'],
     ['Entrega', ENTREGA_LABEL[pedido.tipoEntrega] || pedido.tipoEntrega],
     ['Dirección', pedido.direccion || '—'],
+    ['Pago', FORMA_PAGO_LABEL[pedido.formaPago] || pedido.formaPago || '—'],
   ];
+  const altoBox = filas.length * 5.5 + 3.5;
+  doc.setFillColor(...SUAVE);
+  doc.setDrawColor(...LINEA);
+  doc.roundedRect(M, y, RIGHT - M, altoBox, 2.5, 2.5, 'FD');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...GRIS);
   let fy = y + 7;
   filas.forEach(([label, value]) => {
     doc.setFont('helvetica', 'normal');
@@ -69,12 +84,12 @@ export function buildReciboPedido(pedido) {
     doc.text(String(value), M + 32, fy);
     fy += 5.5;
   });
-  y += 26 + 8;
+  y += altoBox + 8;
 
   autoTable(doc, {
     startY: y,
     head: [['Producto', 'Cantidad', 'Precio unitario', 'Subtotal']],
-    body: pedido.items.map((i) => [i.producto?.nombre || '—', Number(i.cantidad), money(i.precioUnitario), money(i.subtotal)]),
+    body: pedido.items.map((i) => [nombreConAdiciones(i), Number(i.cantidad), money(i.precioUnitario), money(i.subtotal)]),
     theme: 'striped',
     headStyles: { fillColor: NEGRO, textColor: BLANCO, fontStyle: 'bold', fontSize: 9.5, cellPadding: 3 },
     bodyStyles: { fontSize: 9.5, textColor: NEGRO, cellPadding: 2.8 },
