@@ -21,6 +21,11 @@ export const eliminarIngrediente = createAsyncThunk('ingredientes/eliminar', asy
   dispatch(fetchIngredientes());
 });
 
+export const reactivarIngrediente = createAsyncThunk('ingredientes/reactivar', async (id, { dispatch }) => {
+  await ingredienteService.actualizar(id, { activo: true });
+  dispatch(fetchIngredientes());
+});
+
 export const registrarMovimiento = createAsyncThunk(
   'ingredientes/movimiento',
   async ({ id, payload }, { dispatch }) => {

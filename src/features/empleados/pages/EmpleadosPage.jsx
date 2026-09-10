@@ -12,6 +12,8 @@ import {
 } from '../slices/empleadosSlice.js';
 import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
+import ConfirmDialog from '../../../shared/components/ConfirmDialog/ConfirmDialog.jsx';
+import { notificar } from '../../../shared/slices/uiSlice.js';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
 
@@ -31,6 +33,7 @@ export default function EmpleadosPage() {
   const [formTurno, setFormTurno] = useState(TURNO_VACIO);
   const [errorTurno, setErrorTurno] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState('activos');
+  const [confirmando, setConfirmando] = useState(null);
 
   useEffect(() => {
     dispatch(fetchEmpleados());
@@ -58,11 +61,33 @@ export default function EmpleadosPage() {
   };
 
   const desactivarEmpleado = (empleado) => {
-    if (confirm(`¿Desactivar a ${empleado.nombre}?`)) dispatch(eliminarEmpleado(empleado.id));
+    setConfirmando({
+      mensaje: `¿Desactivar a ${empleado.nombre}?`,
+      onConfirmar: () => {
+        dispatch(eliminarEmpleado(empleado.id));
+        dispatch(notificar(`${empleado.nombre} desactivado`, 'exito'));
+      },
+    });
   };
 
   const reactivar = (empleado) => {
-    if (confirm(`¿Reactivar a ${empleado.nombre}?`)) dispatch(reactivarEmpleado(empleado.id));
+    setConfirmando({
+      mensaje: `¿Reactivar a ${empleado.nombre}?`,
+      onConfirmar: () => {
+        dispatch(reactivarEmpleado(empleado.id));
+        dispatch(notificar(`${empleado.nombre} reactivado`, 'exito'));
+      },
+    });
+  };
+
+  const eliminarTurnoConfirmado = (turno) => {
+    setConfirmando({
+      mensaje: `¿Eliminar el turno de ${turno.empleado.nombre} del ${new Date(turno.fecha).toLocaleDateString('es-CO')}?`,
+      onConfirmar: () => {
+        dispatch(eliminarTurno(turno.id));
+        dispatch(notificar('Turno eliminado', 'exito'));
+      },
+    });
   };
 
   const empleadosFiltrados = empleados.filter((e) =>
@@ -124,7 +149,7 @@ export default function EmpleadosPage() {
       key: 'acciones',
       header: '',
       render: (f) => (
-        <button className="btn btn-peligro btn-sm" onClick={() => confirm('¿Eliminar turno?') && dispatch(eliminarTurno(f.id))}>
+        <button className="btn btn-peligro btn-sm" onClick={() => eliminarTurnoConfirmado(f)}>
           Eliminar
         </button>
       ),
@@ -260,6 +285,8 @@ export default function EmpleadosPage() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog pendiente={confirmando} onCancelar={() => setConfirmando(null)} />
     </div>
   );
 }

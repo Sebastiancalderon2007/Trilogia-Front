@@ -1,0 +1,33 @@
+.conectando-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: var(--color-amarillo);
+  color: var(--color-negro);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-align: center;
+}
+
+.conectando-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(17, 17, 17, 0.3);
+  border-top-color: var(--color-negro);
+  border-radius: 50%;
+  animation: girar 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}

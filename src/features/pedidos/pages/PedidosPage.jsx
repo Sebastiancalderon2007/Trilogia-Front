@@ -8,6 +8,7 @@ import Modal from '../../../shared/components/Modal/Modal.jsx';
 import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
 import { coincide } from '../../../shared/utils/texto.js';
 import { generarReciboPedido } from '../../../shared/utils/generarRecibo.js';
+import { notificar } from '../../../shared/slices/uiSlice.js';
 import PedidoForm from '../components/PedidoForm.jsx';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
@@ -47,7 +48,9 @@ export default function PedidosPage() {
     }
     const alertas = resultado.payload.alertasStock;
     if (alertas?.length) {
-      alert('Pedido actualizado. Atención: quedaron bajos de stock: ' + alertas.map((a) => a.nombre).join(', '));
+      dispatch(notificar('Pedido actualizado. Quedaron bajos de stock: ' + alertas.map((a) => a.nombre).join(', '), 'advertencia'));
+    } else {
+      dispatch(notificar('Pedido actualizado', 'exito'));
     }
     setEditando(null);
   };

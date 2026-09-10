@@ -5,6 +5,8 @@ import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
 import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
 import { coincide } from '../../../shared/utils/texto.js';
+import ConfirmDialog from '../../../shared/components/ConfirmDialog/ConfirmDialog.jsx';
+import { notificar } from '../../../shared/slices/uiSlice.js';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
 const VACIO = { categoria: '', descripcion: '', valor: '', fecha: new Date().toISOString().slice(0, 10) };
@@ -15,6 +17,7 @@ export default function GastosPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [form, setForm] = useState(VACIO);
   const [busqueda, setBusqueda] = useState('');
+  const [confirmando, setConfirmando] = useState(null);
 
   useEffect(() => {
     dispatch(fetchGastos());
@@ -23,8 +26,19 @@ export default function GastosPage() {
   const guardar = async (e) => {
     e.preventDefault();
     await dispatch(crearGasto({ ...form, categoria: form.categoria || null, valor: Number(form.valor) }));
+    dispatch(notificar('Gasto registrado', 'exito'));
     setForm(VACIO);
     setModalAbierto(false);
+  };
+
+  const eliminarConfirmado = (gasto) => {
+    setConfirmando({
+      mensaje: `¿Eliminar el gasto "${gasto.descripcion}" (${money(gasto.valor)})?`,
+      onConfirmar: () => {
+        dispatch(eliminarGasto(gasto.id));
+        dispatch(notificar('Gasto eliminado', 'exito'));
+      },
+    });
   };
 
   const totalPeriodo = lista.reduce((acc, g) => acc + Number(g.valor), 0);
@@ -38,7 +52,7 @@ export default function GastosPage() {
       key: 'acciones',
       header: '',
       render: (f) => (
-        <button className="btn btn-peligro btn-sm" onClick={() => confirm('¿Eliminar gasto?') && dispatch(eliminarGasto(f.id))}>
+        <button className="btn btn-peligro btn-sm" onClick={() => eliminarConfirmado(f)}>
           Eliminar
         </button>
       ),
@@ -99,6 +113,8 @@ export default function GastosPage() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog pendiente={confirmando} onCancelar={() => setConfirmando(null)} />
     </div>
   );
 }

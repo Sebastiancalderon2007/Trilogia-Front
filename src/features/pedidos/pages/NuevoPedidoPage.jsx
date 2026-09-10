@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { crearPedido } from '../slices/pedidosSlice.js';
 import { fetchProductos } from '../../productos/slices/productosSlice.js';
+import { notificar } from '../../../shared/slices/uiSlice.js';
 import PedidoForm from '../components/PedidoForm.jsx';
 
 export default function NuevoPedidoPage() {
@@ -21,7 +22,9 @@ export default function NuevoPedidoPage() {
     }
     const alertas = resultado.payload.alertasStock;
     if (alertas?.length) {
-      alert('Pedido creado. Atención: quedaron bajos de stock: ' + alertas.map((a) => a.nombre).join(', '));
+      dispatch(notificar('Pedido creado. Quedaron bajos de stock: ' + alertas.map((a) => a.nombre).join(', '), 'advertencia'));
+    } else {
+      dispatch(notificar('Pedido creado', 'exito'));
     }
     navigate('/pedidos');
   };

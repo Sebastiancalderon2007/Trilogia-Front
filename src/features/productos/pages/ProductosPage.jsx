@@ -9,6 +9,8 @@ import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
 import { coincide } from '../../../shared/utils/texto.js';
 import RecetaItemsEditor from '../components/RecetaItemsEditor.jsx';
 import '../components/RecetaItemsEditor.css';
+import ConfirmDialog from '../../../shared/components/ConfirmDialog/ConfirmDialog.jsx';
+import { notificar } from '../../../shared/slices/uiSlice.js';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
 
@@ -35,6 +37,7 @@ export default function ProductosPage() {
   const [items, setItems] = useState([]);
   const [costeo, setCosteo] = useState(null);
   const [viendoReceta, setViendoReceta] = useState(null);
+  const [confirmando, setConfirmando] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProductos());
@@ -105,11 +108,23 @@ export default function ProductosPage() {
   };
 
   const eliminar = (producto) => {
-    if (confirm(`¿Desactivar "${producto.nombre}"?`)) dispatch(eliminarProducto(producto.id));
+    setConfirmando({
+      mensaje: `¿Desactivar "${producto.nombre}"?`,
+      onConfirmar: () => {
+        dispatch(eliminarProducto(producto.id));
+        dispatch(notificar(`"${producto.nombre}" desactivado`, 'exito'));
+      },
+    });
   };
 
   const reactivar = (producto) => {
-    if (confirm(`¿Reactivar "${producto.nombre}"?`)) dispatch(reactivarProducto(producto.id));
+    setConfirmando({
+      mensaje: `¿Reactivar "${producto.nombre}"?`,
+      onConfirmar: () => {
+        dispatch(reactivarProducto(producto.id));
+        dispatch(notificar(`"${producto.nombre}" reactivado`, 'exito'));
+      },
+    });
   };
 
   const filas = lista
@@ -312,6 +327,8 @@ export default function ProductosPage() {
           </div>
         </Modal>
       )}
+
+      <ConfirmDialog pendiente={confirmando} onCancelar={() => setConfirmando(null)} />
     </div>
   );
 }

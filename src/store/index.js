@@ -5,6 +5,7 @@ import productosReducer from '../features/productos/slices/productosSlice.js';
 import pedidosReducer from '../features/pedidos/slices/pedidosSlice.js';
 import empleadosReducer from '../features/empleados/slices/empleadosSlice.js';
 import gastosReducer from '../features/gastos/slices/gastosSlice.js';
+import uiReducer from '../shared/slices/uiSlice.js';
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     pedidos: pedidosReducer,
     empleados: empleadosReducer,
     gastos: gastosReducer,
+    ui: uiReducer,
   },
 });

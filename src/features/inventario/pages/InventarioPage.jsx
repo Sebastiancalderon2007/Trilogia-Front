@@ -5,13 +5,16 @@ import {
   crearIngrediente,
   actualizarIngrediente,
   eliminarIngrediente,
+  reactivarIngrediente,
   registrarMovimiento,
 } from '../slices/ingredientesSlice.js';
 import Table from '../../../shared/components/Table/Table.jsx';
 import Modal from '../../../shared/components/Modal/Modal.jsx';
 import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
+import ConfirmDialog from '../../../shared/components/ConfirmDialog/ConfirmDialog.jsx';
 import { coincide } from '../../../shared/utils/texto.js';
 import { bajoStock } from '../../../shared/utils/inventario.js';
+import { notificar } from '../../../shared/slices/uiSlice.js';
 
 const UNIDADES = [
   { value: 'g', label: 'Gramos (g)' },
@@ -31,6 +34,8 @@ export default function InventarioPage() {
   const [ingredienteMovimiento, setIngredienteMovimiento] = useState(null);
   const [movimiento, setMovimiento] = useState({ tipo: 'ENTRADA', motivo: 'COMPRA', cantidad: '', nota: '' });
   const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('activos');
+  const [confirmando, setConfirmando] = useState(null);
 
   useEffect(() => {
     dispatch(fetchIngredientes());
@@ -75,7 +80,23 @@ export default function InventarioPage() {
   };
 
   const eliminar = (ingrediente) => {
-    if (confirm(`¿Desactivar "${ingrediente.nombre}"?`)) dispatch(eliminarIngrediente(ingrediente.id));
+    setConfirmando({
+      mensaje: `¿Desactivar "${ingrediente.nombre}"?`,
+      onConfirmar: () => {
+        dispatch(eliminarIngrediente(ingrediente.id));
+        dispatch(notificar(`${ingrediente.nombre} desactivado`, 'exito'));
+      },
+    });
+  };
+
+  const reactivar = (ingrediente) => {
+    setConfirmando({
+      mensaje: `¿Reactivar "${ingrediente.nombre}"?`,
+      onConfirmar: () => {
+        dispatch(reactivarIngrediente(ingrediente.id));
+        dispatch(notificar(`${ingrediente.nombre} reactivado`, 'exito'));
+      },
+    });
   };
 
   const guardarMovimiento = async (e) => {
@@ -109,6 +130,11 @@ export default function InventarioPage() {
     { key: 'stockMinimo', header: 'Mínimo', render: (f) => `${Number(f.stockMinimo)} ${f.unidadMedida}` },
     { key: 'costoUnitario', header: `Costo/unidad`, render: (f) => `$${Number(f.costoUnitario).toLocaleString('es-CO')}` },
     {
+      key: 'estado',
+      header: 'Estado',
+      render: (f) => <span className={`badge ${f.activo ? 'badge-verde' : 'badge-gris'}`}>{f.activo ? 'Activo' : 'Inactivo'}</span>,
+    },
+    {
       key: 'acciones',
       header: '',
       render: (f) => (
@@ -121,9 +147,15 @@ export default function InventarioPage() {
               <button className="btn btn-secundario btn-sm" onClick={() => abrirEditar(f)}>
                 Editar
               </button>
-              <button className="btn btn-peligro btn-sm" onClick={() => eliminar(f)}>
-                Desactivar
-              </button>
+              {f.activo ? (
+                <button className="btn btn-peligro btn-sm" onClick={() => eliminar(f)}>
+                  Desactivar
+                </button>
+              ) : (
+                <button className="btn btn-secundario btn-sm" onClick={() => reactivar(f)}>
+                  Reactivar
+                </button>
+              )}
             </>
           )}
         </div>
@@ -132,6 +164,9 @@ export default function InventarioPage() {
   ];
 
   const insumosBajoStock = lista.filter((i) => i.activo && bajoStock(i));
+  const listaFiltradaEstado = lista.filter((i) =>
+    filtroEstado === 'todos' ? true : filtroEstado === 'activos' ? i.activo : !i.activo
+  );
 
   return (
     <div className="pagina">
@@ -154,10 +189,26 @@ export default function InventarioPage() {
 
       <Buscador valor={busqueda} onChange={setBusqueda} placeholder="Buscar insumo o categoría…" />
 
+      <div className="panel" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {[
+          { key: 'activos', label: 'Activos' },
+          { key: 'inactivos', label: 'Inactivos' },
+          { key: 'todos', label: 'Todos' },
+        ].map((e) => (
+          <button
+            key={e.key}
+            className={`btn btn-sm ${filtroEstado === e.key ? 'btn-amarillo' : 'btn-secundario'}`}
+            onClick={() => setFiltroEstado(e.key)}
+          >
+            {e.label}
+          </button>
+        ))}
+      </div>
+
       <div className="panel">
         <Table
           columnas={columnas}
-          filas={lista.filter((i) => i.activo && (coincide(i.nombre, busqueda) || coincide(i.categoria, busqueda)))}
+          filas={listaFiltradaEstado.filter((i) => coincide(i.nombre, busqueda) || coincide(i.categoria, busqueda))}
           vacio="No hay insumos registrados"
         />
       </div>
@@ -253,6 +304,8 @@ export default function InventarioPage() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog pendiente={confirmando} onCancelar={() => setConfirmando(null)} />
     </div>
   );
 }

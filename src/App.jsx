@@ -12,6 +12,8 @@ import NuevoPedidoPage from './features/pedidos/pages/NuevoPedidoPage.jsx';
 import EmpleadosPage from './features/empleados/pages/EmpleadosPage.jsx';
 import GastosPage from './features/gastos/pages/GastosPage.jsx';
 import ReportesPage from './features/reportes/pages/ReportesPage.jsx';
+import ToastContainer from './shared/components/Toast/ToastContainer.jsx';
+import ConectandoBanner from './shared/components/ConectandoBanner/ConectandoBanner.jsx';
 
 function ProtectedRoute({ children, soloAdmin = false }) {
   const { token, restoring, usuario } = useSelector((state) => state.auth);
@@ -29,12 +31,22 @@ function App() {
     if (token && !usuario) dispatch(restoreSession());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (restoring) return null;
-
   const inicio = usuario?.rol === 'ADMIN' ? '/dashboard' : '/pedidos';
 
+  if (restoring) {
+    return (
+      <>
+        <ConectandoBanner />
+        <ToastContainer />
+      </>
+    );
+  }
+
   return (
-    <Routes>
+    <>
+      <ConectandoBanner />
+      <ToastContainer />
+      <Routes>
       <Route path="/login" element={token ? <Navigate to={inicio} replace /> : <LoginPage />} />
 
       <Route
@@ -91,7 +103,8 @@ function App() {
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 
