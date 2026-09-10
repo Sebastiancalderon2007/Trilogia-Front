@@ -21,7 +21,9 @@ export default function Table({ columnas, filas, claveFila = 'id', vacio = 'Sin 
           {filas.map((fila) => (
             <tr key={fila[claveFila]}>
               {columnas.map((col) => (
-                <td key={col.key}>{col.render ? col.render(fila) : fila[col.key]}</td>
+                <td key={col.key} data-label={col.header}>
+                  {col.render ? col.render(fila) : fila[col.key]}
+                </td>
               ))}
             </tr>
           ))}

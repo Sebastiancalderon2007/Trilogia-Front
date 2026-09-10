@@ -28,3 +28,57 @@
 .tabla tbody tr:hover {
   background: var(--bg-hover);
 }
+
+/* En pantallas angostas, cada fila se convierte en una tarjeta con pares
+   etiqueta/valor apilados, en vez de forzar scroll horizontal para ver
+   columnas que quedan cortadas. */
+@media (max-width: 640px) {
+  .tabla thead {
+    display: none;
+  }
+  .tabla,
+  .tabla tbody,
+  .tabla tr,
+  .tabla td {
+    display: block;
+    width: 100%;
+  }
+  .tabla tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.2rem 0.85rem;
+    background: var(--bg-panel);
+  }
+  .tabla tbody tr:hover {
+    background: var(--bg-panel);
+  }
+  .tabla td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border-color);
+    text-align: right;
+  }
+  .tabla td:last-child {
+    border-bottom: none;
+  }
+  .tabla td[data-label]:not([data-label=''])::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-secundario);
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .tabla td[data-label=''] {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+}
