@@ -8,6 +8,7 @@ import Modal from '../../../shared/components/Modal/Modal.jsx';
 import Buscador from '../../../shared/components/Buscador/Buscador.jsx';
 import { coincide } from '../../../shared/utils/texto.js';
 import { generarReciboPedido } from '../../../shared/utils/generarRecibo.js';
+import { linkConfirmacionWhatsApp } from '../../../shared/utils/whatsapp.js';
 import { notificar } from '../../../shared/slices/uiSlice.js';
 import PedidoForm from '../components/PedidoForm.jsx';
 
@@ -103,6 +104,14 @@ export default function PedidosPage() {
           <button className="btn btn-secundario btn-sm" onClick={() => generarReciboPedido(f)}>
             Recibo
           </button>
+          {f.telefono && (
+            <button
+              className="btn btn-secundario btn-sm"
+              onClick={() => window.open(linkConfirmacionWhatsApp(f), '_blank')}
+            >
+              WhatsApp
+            </button>
+          )}
           {ESTADOS_EDITABLES.includes(f.estado) && (
             <button className="btn btn-secundario btn-sm" onClick={() => setEditando(f)}>
               Editar
